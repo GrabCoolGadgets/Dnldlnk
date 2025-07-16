@@ -8,7 +8,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")  # Render se secure token lega
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text.strip()
-    search_url = f"https://vegamovies.quest/?s={query.replace(' ', '+')}"
+    search_url = f"https://apk4free.net/?s={query.replace(' ', '+')}"
     headers = { "User-Agent": "Mozilla/5.0" }
 
     try:
