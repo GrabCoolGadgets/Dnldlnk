@@ -4,35 +4,36 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 import os
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Render se secure token lega
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text.strip()
     search_url = f"https://apk4free.net/?s={query.replace(' ', '+')}"
-    headers = { "User-Agent": "Mozilla/5.0" }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     try:
-        res = requests.get(search_url, headers=headers)
+        res = requests.get(search_url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, "html.parser")
-        first = soup.select_one("h2.title a")
+        first_result = soup.select_one("h2.post-title a")
 
-        if not first:
-            await update.message.reply_text("❌ Koi result nahi mila.")
+        if not first_result:
+            await update.message.reply_text("❌ Koi APK result nahi mila.")
             return
 
-        title = first.text.strip()
-        post_link = first['href']
+        app_title = first_result.text.strip()
+        app_page = first_result['href']
 
-        post_res = requests.get(post_link, headers=headers)
-        post_soup = BeautifulSoup(post_res.text, "html.parser")
-        dl = post_soup.select_one("a[href*='.mkv'], a[href*='.mp4'], a[href*='drive.google.com']")
+        # Get download link
+        app_page_res = requests.get(app_page, headers=headers, timeout=10)
+        app_soup = BeautifulSoup(app_page_res.text, "html.parser")
+        download_btn = app_soup.select_one("a[href*='apkadmin.com'], a[href*='mediafire.com'], a[href*='dropbox.com']")
 
-        if dl:
-            final_link = dl['href']
-            reply = f"🎬 {title}\n⬇️ [Download Now]({final_link})"
-            await update.message.reply_text(reply, parse_mode="Markdown", disable_web_page_preview=False)
+        if download_btn:
+            download_link = download_btn['href']
+            reply = f"📱 {app_title}\n⬇️ [Download Link]({download_link})"
+            await update.message.reply_text(reply, parse_mode="Markdown", disable_web_page_preview=True)
         else:
-            await update.message.reply_text("😢 Link nahi mila.")
+            await update.message.reply_text(f"📱 {app_title}\n🔗 {app_page}\n(Link page par hi milega)")
     except Exception as e:
         await update.message.reply_text("⚠️ Error: " + str(e))
 
